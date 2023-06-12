@@ -35,7 +35,6 @@ genreRouter.post("/", async (req, res) => {
 
 genreRouter.delete("/", async (req, res) => {
   const { id } = req.body;
-
   const data = await genreModel.findByIdAndDelete(id);
   res.json(data);
 });
