@@ -17,7 +17,13 @@ const signIn = async (req, res) => {
 
     //generate access token
     const accesstoken = generateAccessToken(isUserExist._id);
-    return res.status(200).json({ message: "Login success", accesstoken });
+    return res
+      .status(200)
+      .json({
+        message: "Login success",
+        accesstoken,
+        email: isUserExist.email,
+      });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -47,7 +53,7 @@ const watchlater = async (req, res) => {
     var watchList = await userModel
       .find({ _id: req.userId })
       .select("movies")
-      .populate({ path: "movies", populate: { path: 'genre' } })
+      .populate({ path: "movies", populate: { path: "genre" } });
     //await watchList.populate({ path: "movies", model: "movies" });
 
     res.json(watchList);

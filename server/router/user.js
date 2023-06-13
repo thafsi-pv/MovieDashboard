@@ -15,6 +15,6 @@ userRouter.post("/signUp", signup);
 
 userRouter.get("/watchlist", checkAuth, watchlater);
 
-userRouter.post("/addwathclater", checkAuth, addtoWathclater);
+userRouter.post("/addwatchlater", checkAuth, addtoWathclater);
 
 module.exports = userRouter;
