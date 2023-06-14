@@ -1,7 +1,10 @@
 const userModel = require("../models/userModel");
 const { comparePassword, generatePasswordHash } = require("../utils/bcrypt");
 const { generateAccessToken } = require("../utils/jwt");
+const { sendPasswordResetEmailNodeMail } = require("../utils/nodemailer");
+const { generateVerificationCode } = require("../utils/verificationCode");
 
+const PasscodeVerificationData = {};
 const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -17,13 +20,11 @@ const signIn = async (req, res) => {
 
     //generate access token
     const accesstoken = generateAccessToken(isUserExist._id);
-    return res
-      .status(200)
-      .json({
-        message: "Login success",
-        accesstoken,
-        email: isUserExist.email,
-      });
+    return res.status(200).json({
+      message: "Login success",
+      accesstoken,
+      email: isUserExist.email,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -34,9 +35,9 @@ const signup = async (req, res) => {
     const { email, password } = req.body;
     const isExist = await userModel.findOne({ email });
     if (isExist) {
-      res
-        .status(400)
-        .json({ message: "This email address has already been registered!." });
+      res.status(400).json({
+        message: "This email address has already been registered!. 😁",
+      });
       return;
     }
 
@@ -63,10 +64,6 @@ const watchlater = async (req, res) => {
 };
 
 const addtoWathclater = async (req, res) => {
-  console.log(
-    "🚀 ~ file: userController.js:57 ~ addtoWathclater ~ req:",
-    req.body
-  );
   const userId = req.userId;
   const newList = await userModel.findByIdAndUpdate(
     userId,
@@ -79,4 +76,47 @@ const addtoWathclater = async (req, res) => {
   res.json(newList);
 };
 
-module.exports = { signIn, signup, watchlater, addtoWathclater };
+const forgotPassword = async (req, res) => {
+  try {
+    const { mail } = req.body;
+
+    const isMailExist = await userModel.findOne({ email: mail });
+
+    if (isMailExist == null) {
+      res.status(400).json({ message: `No user found with email: ${mail} 👎🏻` });
+      return;
+    }
+    const verificationCode = generateVerificationCode();
+    PasscodeVerificationData.userId = isMailExist._id;
+    PasscodeVerificationData.code = verificationCode;
+    const email = mail;
+    const respo = await sendPasswordResetEmailNodeMail(email, verificationCode);
+    res.json(respo);
+  } catch (error) {
+    res.json({ message: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { passwordReset } = req.body;
+  if (passwordReset.resetCode == PasscodeVerificationData.code) {
+    const hash = await generatePasswordHash(passwordReset.newPassword);
+    const update = await userModel.findByIdAndUpdate(
+      PasscodeVerificationData.userId,
+      { password: hash },
+      { new: true }
+    );
+    res.json(update);
+  } else {
+    res.status(400).json({ message: "Incorrect reset code entered!😫" });
+  }
+};
+
+module.exports = {
+  signIn,
+  signup,
+  watchlater,
+  addtoWathclater,
+  forgotPassword,
+  resetPassword,
+};

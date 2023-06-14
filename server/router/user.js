@@ -5,7 +5,8 @@ const {
   signup,
   watchlater,
   addtoWathclater,
-  watchlater1,
+  forgotPassword,
+  resetPassword,
 } = require("../controller/userController");
 const { checkAuth } = require("../middleware/checkAuth");
 
@@ -16,5 +17,9 @@ userRouter.post("/signUp", signup);
 userRouter.get("/watchlist", checkAuth, watchlater);
 
 userRouter.post("/addwatchlater", checkAuth, addtoWathclater);
+
+userRouter.post("/forgotPassword", forgotPassword);
+
+userRouter.post("/resetPassword", resetPassword);
 
 module.exports = userRouter;
